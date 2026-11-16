@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:raitabazzar/config/app_config.dart';
 import 'package:raitabazzar/firebase_options.dart';
 import 'package:raitabazzar/l10n/app_localizations.dart';
 import 'package:raitabazzar/provider/app_provider.dart';
@@ -10,6 +11,7 @@ import 'package:raitabazzar/screens/welcome_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.initialize();
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

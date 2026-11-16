@@ -49,3 +49,10 @@ app.*.map.json
 **/ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 
+# Secrets and environment configs
+secrets.json
+.env
+.env.*
+assets/config/secrets.json
+
+

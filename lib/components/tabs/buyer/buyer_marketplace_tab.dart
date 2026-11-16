@@ -5,7 +5,9 @@ import 'package:raitabazzar/components/buyer_produce_card.dart';
 import 'package:raitabazzar/l10n/app_localizations.dart';
 import 'package:raitabazzar/models/buyer_offer.dart';
 import 'package:raitabazzar/models/crop_listing.dart';
+import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
+import 'package:raitabazzar/screens/mandi_rates_screen.dart';
 import 'package:raitabazzar/utils/constant.dart';
 import 'package:raitabazzar/utils/contact_helper.dart';
 
@@ -20,6 +22,7 @@ class BuyerMarketplaceTabState extends State<BuyerMarketplaceTab> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedCategoryIndex = 0;
   String _searchQuery = '';
+  int? _maxDistanceKm;
 
   final List<Map<String, String>> _categories = [
     {'name': 'All', 'icon': '🌾'},
@@ -34,6 +37,73 @@ class BuyerMarketplaceTabState extends State<BuyerMarketplaceTab> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _showDistanceFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Filter by Distance / ಅಂತರ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  if (_maxDistanceKm != null)
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _maxDistanceKm = null);
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Reset'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildDistanceChip(ctx, null, 'All Karnataka'),
+                  _buildDistanceChip(ctx, 15, 'Within 15 km'),
+                  _buildDistanceChip(ctx, 30, 'Within 30 km'),
+                  _buildDistanceChip(ctx, 50, 'Within 50 km'),
+                  _buildDistanceChip(ctx, 100, 'Within 100 km'),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDistanceChip(BuildContext ctx, int? distance, String label) {
+    final isSelected = _maxDistanceKm == distance;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: AppConstants.lightGreenBg,
+      labelStyle: TextStyle(
+        color: isSelected ? AppConstants.primaryGreen : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      onSelected: (_) {
+        setState(() => _maxDistanceKm = distance);
+        Navigator.pop(ctx);
+      },
+    );
   }
 
   void _showOfferBottomSheet(BuildContext context, CropListing listing) {
@@ -122,12 +192,14 @@ class BuyerMarketplaceTabState extends State<BuyerMarketplaceTab> {
                       return;
                     }
 
+                    final appProvider = Provider.of<AppProvider>(context, listen: false);
+
                     final offer = BuyerOffer(
                       id: 'offer_${DateTime.now().millisecondsSinceEpoch}',
                       listingId: listing.id,
-                      buyerName: 'Ramesh Traders',
-                      buyerPhone: '+919988776655',
-                      buyerLocation: 'Bengaluru (K.R. Market)',
+                      buyerName: appProvider.buyerName,
+                      buyerPhone: appProvider.buyerPhone,
+                      buyerLocation: appProvider.buyerLocation,
                       cropName: listing.cropName,
                       offeredPrice: price,
                       unit: listing.unit,
@@ -169,7 +241,10 @@ class BuyerMarketplaceTabState extends State<BuyerMarketplaceTab> {
     final listings = listingProvider.filterMarketListings(
       query: _searchQuery,
       category: selectedCategory,
+      maxDistanceKm: _maxDistanceKm,
     );
+
+    final distanceFilterLabel = _maxDistanceKm != null ? '< $_maxDistanceKm km' : 'All Karnataka';
 
     return SafeArea(
       child: Column(
@@ -186,22 +261,40 @@ class BuyerMarketplaceTabState extends State<BuyerMarketplaceTab> {
                     const SizedBox(width: 6),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Delivering to',
+                      children: [
+                        const Text(
+                          'Marketplace Reach',
                           style: TextStyle(fontSize: 11, color: Colors.grey),
                         ),
                         Text(
-                          'Bengaluru (Near 50 km)',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          distanceFilterLabel,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.filter_list_rounded),
-                  onPressed: () {},
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.trending_up, color: AppConstants.primaryGreen),
+                      tooltip: 'APMC Mandi Rates',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const MandiRatesScreen()),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: Badge(
+                        isLabelVisible: _maxDistanceKm != null,
+                        label: Text('$_maxDistanceKm'),
+                        child: const Icon(Icons.tune_rounded),
+                      ),
+                      tooltip: 'Filter by Distance',
+                      onPressed: _showDistanceFilterSheet,
+                    ),
+                  ],
                 ),
               ],
             ),

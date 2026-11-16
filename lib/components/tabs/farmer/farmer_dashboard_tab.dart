@@ -4,8 +4,10 @@ import 'package:raitabazzar/components/farmer_crop_item.dart';
 import 'package:raitabazzar/components/mandi_item.dart';
 import 'package:raitabazzar/components/stat_card.dart';
 import 'package:raitabazzar/l10n/app_localizations.dart';
+import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
 import 'package:raitabazzar/screens/add_produce_screen.dart';
+import 'package:raitabazzar/screens/mandi_rates_screen.dart';
 import 'package:raitabazzar/screens/weather_screen.dart';
 import 'package:raitabazzar/utils/constant.dart';
 
@@ -16,6 +18,7 @@ class FarmerDashboardTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final listingProvider = Provider.of<ListingProvider>(context);
+    final appProvider = Provider.of<AppProvider>(context);
     final listings = listingProvider.myFarmerListings;
 
     return SafeArea(
@@ -32,7 +35,7 @@ class FarmerDashboardTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      loc.greetings,
+                      '${loc.greetings}, ${appProvider.farmerName.split(' ').first}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -40,12 +43,12 @@ class FarmerDashboardTab extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Row(
-                      children: const [
-                        Icon(Icons.location_on, size: 14, color: AppConstants.primaryGreen),
-                        SizedBox(width: 4),
+                      children: [
+                        const Icon(Icons.location_on, size: 14, color: AppConstants.primaryGreen),
+                        const SizedBox(width: 4),
                         Text(
-                          'Mandya, Karnataka',
-                          style: TextStyle(fontSize: 13, color: Colors.grey),
+                          appProvider.farmerLocation,
+                          style: const TextStyle(fontSize: 13, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -215,48 +218,61 @@ class FarmerDashboardTab extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Mandi Rates Ticker
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.trending_up, color: AppConstants.primaryGreen, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            loc.mandiRates,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const Text(
-                        'Mandya Mandi',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(height: 1),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: const [
-                      MandiItem(crop: 'Tomato', rate: '₹28/kg', isUp: true),
-                      MandiItem(crop: 'Red Onion', rate: '₹36/kg', isUp: false),
-                      MandiItem(crop: 'Ragi', rate: '₹3,200/qtl', isUp: true),
-                    ],
-                  ),
-                ],
+            // Mandi Rates Ticker (Tappable to explore all APMC markets)
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MandiRatesScreen(initialDistrict: 'Mandya')),
+                );
+              },
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.trending_up, color: AppConstants.primaryGreen, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              loc.mandiRates,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: const [
+                            Text(
+                              'View All',
+                              style: TextStyle(fontSize: 12, color: AppConstants.primaryGreen, fontWeight: FontWeight.bold),
+                            ),
+                            Icon(Icons.arrow_forward_ios, size: 10, color: AppConstants.primaryGreen),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: const [
+                        MandiItem(crop: 'Tomato', rate: '₹22/kg', isUp: true),
+                        MandiItem(crop: 'Red Onion', rate: '₹34/kg', isUp: false),
+                        MandiItem(crop: 'Ragi', rate: '₹3,250/qtl', isUp: true),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 

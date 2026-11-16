@@ -26,7 +26,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
     final pages = [
       const FarmerDashboardTab(),
-      const FarmerMyCropsTab(),
+      FarmerMyCropsTab(onSwitchToOffers: () {
+        setState(() {
+          _currentIndex = 2;
+        });
+      }),
       const FarmerOffersTab(),
       const FarmerProfileTab(),
     ];

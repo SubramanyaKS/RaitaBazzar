@@ -120,6 +120,12 @@ class ListingProvider with ChangeNotifier {
 
   void _initFirebaseSync() {
     try {
+      // Trigger automatic migration to Cloud Firestore if cloud is empty
+      _firebaseService.seedInitialDataIfEmpty(
+        seedCrops: _listings,
+        seedOffers: _offers,
+      );
+
       _cropsSub = _firebaseService.streamActiveCrops().listen(
         (firestoreCrops) {
           if (firestoreCrops.isNotEmpty) {
@@ -129,7 +135,7 @@ class ListingProvider with ChangeNotifier {
           }
         },
         onError: (e) {
-          debugPrint('Firestore crops stream listening error (using offline seed): $e');
+          debugPrint('Firestore crops stream note (using offline fallback): $e');
         },
       );
 
@@ -141,7 +147,7 @@ class ListingProvider with ChangeNotifier {
           }
         },
         onError: (e) {
-          debugPrint('Firestore offers stream listening error: $e');
+          debugPrint('Firestore offers stream note: $e');
         },
       );
     } catch (e) {
@@ -186,6 +192,35 @@ class ListingProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to sync price update to Firestore: $e');
     }
+  }
+
+  Future<void> updateListingDetails(String id, {double? price, double? quantity, String? status}) async {
+    final index = _listings.indexWhere((l) => l.id == id);
+    if (index != -1) {
+      final current = _listings[index];
+      final updated = current.copyWith(
+        pricePerUnit: price ?? current.pricePerUnit,
+        quantity: quantity ?? current.quantity,
+        status: status ?? current.status,
+      );
+      _listings[index] = updated;
+      notifyListeners();
+
+      final Map<String, dynamic> updates = {};
+      if (price != null) updates['pricePerUnit'] = price;
+      if (quantity != null) updates['quantity'] = quantity;
+      if (status != null) updates['status'] = status;
+
+      try {
+        await _firebaseService.updateCropListing(id, updates);
+      } catch (e) {
+        debugPrint('Failed to sync listing updates to Firestore: $e');
+      }
+    }
+  }
+
+  List<BuyerOffer> getOffersForCrop(String cropId) {
+    return _offers.where((o) => o.listingId == cropId).toList();
   }
 
   Future<void> toggleListingStatus(String id) async {
@@ -243,6 +278,7 @@ class ListingProvider with ChangeNotifier {
   List<CropListing> filterMarketListings({
     required String query,
     required String category,
+    int? maxDistanceKm,
   }) {
     return _listings.where((listing) {
       final matchesActive = listing.isActive;
@@ -250,7 +286,8 @@ class ListingProvider with ChangeNotifier {
       final matchesQuery = query.isEmpty ||
           listing.cropName.toLowerCase().contains(query.toLowerCase()) ||
           listing.location.toLowerCase().contains(query.toLowerCase());
-      return matchesActive && matchesCategory && matchesQuery;
+      final matchesDistance = maxDistanceKm == null || listing.distanceKm <= maxDistanceKm;
+      return matchesActive && matchesCategory && matchesQuery && matchesDistance;
     }).toList();
   }
 }

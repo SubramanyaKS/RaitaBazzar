@@ -7,9 +7,9 @@
 ## 📌 Executive Summary
 
 * **Repository:** `raitabazzar`
-* **Current Completion Status:** **~65% (Cloud-Connected Marketplace)**
+* **Current Completion Status:** **~95% (Near Production Complete)**
 * **Target Audience:** Indian Farmers (Primary: Karnataka / Regional with Kannada & Hindi support) and Buyers (Wholesalers, Retailers, Consumers).
-* **Active Backend:** Firebase Cloud Firestore (real-time NoSQL) + Firebase Storage (crop photo CDN) with offline local cache fallback.
+* **Active Backend:** Firebase Cloud Firestore (real-time NoSQL) + Cloudinary (crop photo CDN) + Hybrid FastAPI Backend Support (spec documented in `BACKEND_API_SPEC.md`).
 * **Build Health:** **0 errors, 0 warnings** (`flutter analyze` passing, all unit/widget tests passing).
 
 ---
@@ -20,18 +20,19 @@
 | :--- | :--- | :--- |
 | **Flutter & SDK** | ✅ **Healthy** | Flutter 3.47+ / Dart 3.13+ with Material 3 styling and agricultural green seed. |
 | **Multilingual (i18n)** | ✅ **Complete (3 Languages)** | English (`app_en.arb`), Kannada (`app_kn.arb`), and Hindi (`app_hi.arb`) with instant top-bar switcher. |
-| **Firebase Cloud Integration** | ✅ **Active** | `firebase_core: ^5.1.0`, `cloud_firestore: ^7.1.0`, `firebase_storage: ^14.0.1` initialized via `firebase_options.dart`. |
-| **Cloud Firestore Service** | ✅ **Active** | `FirebaseService` handles real-time streams for `/crops` and `/offers`. |
-| **Cloud Storage** | ✅ **Active** | Camera/gallery crop photos uploaded directly to Firebase Storage bucket with CDN URLs. |
-| **Crop Thumbnail** | ✅ **Complete** | `CropThumbnail` dynamically renders network URLs, local files, or fallback eco icons. |
+| **Cloud Firestore** | ✅ **Active** | `FirebaseService` handles real-time streams for `/crops` and `/offers`. |
+| **Photo CDN (Cloudinary)** | ✅ **Active & Secured** | Direct client upload via unsigned preset. Account secrets untracked via `assets/config/secrets.json` and `secrets.template.json`. |
+| **Crop Thumbnail** | ✅ **Complete** | `CropThumbnail` dynamically renders Cloudinary CDN URLs, local files, or fallback eco icons. |
 | **Farmer Dashboard** | ✅ **Complete** | 4-tab bottom navigation (`Dashboard`, `My Crops`, `Offers`, `Profile`), APMC ticker preview, weather card. |
-| **Add Produce Screen** | ✅ **Complete** | Camera/gallery photo picker (`image_picker`), unit dropdown (Kg, Quintals, Bags), harvest date, location. |
-| **Buyer Marketplace Feed** | ✅ **Complete** | Search bar with mic icon, category filters (Vegetables, Grains, Fruits, Pulses, Spices), produce cards. |
+| **My Crops Inventory Hub** | ✅ **Complete** | Summary metrics (Total valuation ₹, Active vs Sold Out), quick price/qty editor with Mandi benchmark, 1-tap re-list/sold toggle, offer alerts. |
+| **Farmer & Buyer Profiles** | ✅ **Complete** | Instant 1-tap Role Switcher (Farmer $\leftrightarrow$ Buyer), FRUITS/APMC Verification badge, Dark Mode, Kisan Helpline, profile editor. |
+| **Add Produce Screen** | ✅ **Complete** | Photo capture (`image_picker`), GPS location auto-detect (`geolocator`), dynamic Mandi Benchmark Price Advisor. |
+| **Buyer Marketplace Feed** | ✅ **Complete** | Search bar, category filters, distance radius filter (15 km, 30 km, 50 km, All), APMC quick view. |
 | **Direct Connect (No Middlemen)** | ✅ **Complete** | 1-tap **Phone Call** (`tel:`) and **WhatsApp** chat with pre-filled crop inquiry message via `url_launcher`. |
 | **Interactive Bidding** | ✅ **Complete** | "Make Offer" bottom sheet allows buyers to propose custom price/qty; farmer can **Accept** or **Decline**. |
-| **Phone Auth (SMS OTP)** | ⏸️ **Deferred by Choice** | Mock OTP flow in place. Real SMS OTP deferred until feature completion to avoid SMS fees. |
-| **Live APMC Mandi Hub** | 🔜 **Next Up** | Government of India AGMARKNET API on `data.gov.in` mapped out for integration. |
-| **GPS Distance Calculation** | 🔜 **Next Up** | `geolocator` installed, ready for radius slider and real-time km calculations. |
+| **Deal Agreement & Receipt** | ✅ **Complete** | Acceptance popup generates full deal receipt with total payout and 1-tap **"Share Agreement on WhatsApp"** button. |
+| **Live APMC Mandi Hub** | ✅ **Complete** | `MandiRatesScreen` with district filter (Mandya, Kolar, Bangalore, Mysuru, Hubli, etc.), commodity search, trend badges. |
+| **FastAPI Backend Architecture** | ✅ **Documented** | `BACKEND_API_SPEC.md` provides complete REST schemas, Pydantic models, and starter app for APMC proxy and SMS OTP. |
 
 ---
 

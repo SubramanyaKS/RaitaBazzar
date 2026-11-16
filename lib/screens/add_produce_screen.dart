@@ -1,15 +1,28 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:raitabazzar/components/image_option.dart';
 import 'package:raitabazzar/models/crop_listing.dart';
+import 'package:raitabazzar/models/mandi_rate.dart';
+import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
+import 'package:raitabazzar/services/mandi_service.dart';
 import 'package:raitabazzar/utils/constant.dart';
 
 class AddProduceScreen extends StatefulWidget {
-  const AddProduceScreen({super.key});
+  final String? initialCropName;
+  final String? initialCategory;
+  final double? initialSuggestedPrice;
+
+  const AddProduceScreen({
+    super.key,
+    this.initialCropName,
+    this.initialCategory,
+    this.initialSuggestedPrice,
+  });
 
   @override
   State<AddProduceScreen> createState() => _AddProduceScreenState();
@@ -17,6 +30,7 @@ class AddProduceScreen extends StatefulWidget {
 
 class _AddProduceScreenState extends State<AddProduceScreen> {
   final _formKey = GlobalKey<FormState>();
+  final MandiService _mandiService = MandiService();
 
   final TextEditingController _cropNameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
@@ -28,6 +42,8 @@ class _AddProduceScreenState extends State<AddProduceScreen> {
   String _selectedUnit = 'Quintal (100 kg)';
   String _selectedHarvestTime = 'Harvested Today';
   File? _pickedImage;
+  bool _isLocating = false;
+  MandiRate? _benchmarkRate;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -50,7 +66,82 @@ class _AddProduceScreenState extends State<AddProduceScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialCropName != null && widget.initialCropName!.isNotEmpty) {
+      _cropNameController.text = widget.initialCropName!;
+      _updateBenchmark(widget.initialCropName!);
+    }
+    if (widget.initialCategory != null && AppConstants.cropCategories.contains(widget.initialCategory)) {
+      _selectedCategory = widget.initialCategory!;
+    }
+    if (widget.initialSuggestedPrice != null && widget.initialSuggestedPrice! > 0) {
+      _priceController.text = widget.initialSuggestedPrice!.toStringAsFixed(0);
+    }
+
+    _cropNameController.addListener(_onCropNameChanged);
+  }
+
+  void _onCropNameChanged() {
+    _updateBenchmark(_cropNameController.text);
+  }
+
+  void _updateBenchmark(String cropName) {
+    final benchmark = _mandiService.findBenchmarkForCrop(cropName, district: 'Mandya');
+    if (benchmark != _benchmarkRate) {
+      setState(() {
+        _benchmarkRate = benchmark;
+      });
+    }
+  }
+
+  Future<void> _detectGpsLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+        );
+        setState(() {
+          _locationController.text = 'Mandya, Karnataka (${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)})';
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('📍 GPS location captured successfully!'),
+              backgroundColor: AppConstants.primaryGreen,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission is needed to auto-fetch GPS.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not fetch GPS: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLocating = false);
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    _cropNameController.removeListener(_onCropNameChanged);
     _cropNameController.dispose();
     _quantityController.dispose();
     _priceController.dispose();
@@ -137,12 +228,13 @@ class _AddProduceScreenState extends State<AddProduceScreen> {
 
     final double quantity = double.tryParse(_quantityController.text.trim()) ?? 0;
     final double price = double.tryParse(_priceController.text.trim()) ?? 0;
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
 
     final newListing = CropListing(
       id: 'crop_${DateTime.now().millisecondsSinceEpoch}',
-      farmerId: 'farmer_1',
-      farmerName: 'Basavaraj Gowda',
-      farmerPhone: '+919876543210',
+      farmerId: 'farmer_${appProvider.farmerPhone.replaceAll(RegExp(r'[^0-9]'), '')}',
+      farmerName: appProvider.farmerName,
+      farmerPhone: appProvider.farmerPhone,
       cropName: _cropNameController.text.trim(),
       category: _selectedCategory,
       quantity: quantity,
@@ -457,6 +549,54 @@ class _AddProduceScreenState extends State<AddProduceScreen> {
                   },
                 ),
 
+                if (_benchmarkRate != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppConstants.lightGreenBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppConstants.lightGreen),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.insights, color: AppConstants.primaryGreen, size: 24),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mandi Benchmark: ${_benchmarkRate!.market}',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppConstants.deepGreen),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Modal Avg: ${_benchmarkRate!.formattedModalPrice} (Range: ${_benchmarkRate!.formattedRange})',
+                                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _priceController.text = _benchmarkRate!.modalPrice.toStringAsFixed(0);
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                          child: const Text('Use Price'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 20),
 
                 // Harvest Readiness / Date
@@ -505,6 +645,17 @@ class _AddProduceScreenState extends State<AddProduceScreen> {
                     hintText: 'e.g. Village, Mandya District',
                     filled: true,
                     fillColor: Colors.grey.shade50,
+                    suffixIcon: IconButton(
+                      icon: _isLocating
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppConstants.primaryGreen),
+                            )
+                          : const Icon(Icons.my_location, color: AppConstants.primaryGreen),
+                      tooltip: 'Auto-detect GPS Location',
+                      onPressed: _isLocating ? null : _detectGpsLocation,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
