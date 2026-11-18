@@ -247,7 +247,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search crops, vegetables, grains...'**
+  /// **'Search crops (Tomato, ಈರುಳ್ಳಿ, आलू)...'**
   String get searchHint;
 
   /// No description provided for @addProduce.

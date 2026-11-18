@@ -84,7 +84,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editMobile => 'नंबर बदलें';
 
   @override
-  String get searchHint => 'फसलें, सब्जियां, अनाज खोजें...';
+  String get searchHint => 'फसलें खोजें (टमाटर, प्याज, आलू)...';
 
   @override
   String get addProduce => 'फसल जोड़ें';

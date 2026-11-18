@@ -54,6 +54,52 @@ class ContactHelper {
     }
   }
 
+  static Future<void> shareDealAgreement({
+    required BuildContext context,
+    required String buyerPhone,
+    required String buyerName,
+    required String cropName,
+    required double quantity,
+    required String unit,
+    required double price,
+    required double totalAmount,
+  }) async {
+    String cleanNumber = buyerPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleanNumber.length == 10) {
+      cleanNumber = '91$cleanNumber';
+    }
+
+    final message = '''
+🌾 *RaitaBazzar Deal Agreement / ಒಪ್ಪಂದ* 🌾
+
+✅ *Deal Status:* Accepted by Farmer
+🛒 *Buyer:* $buyerName
+📦 *Crop:* $cropName
+⚖️ *Quantity:* $quantity $unit
+💰 *Agreed Rate:* ₹$price / $unit
+💵 *Total Payout:* ₹${totalAmount.toStringAsFixed(0)}
+
+Direct farmer-to-buyer deal confirmed via RaitaBazzar. Please confirm pickup schedule!
+''';
+
+    final urlString = 'https://wa.me/$cleanNumber?text=${Uri.encodeComponent(message)}';
+    final Uri whatsappUri = Uri.parse(urlString);
+
+    try {
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          _showError(context, 'Could not open WhatsApp for +$cleanNumber');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showError(context, 'WhatsApp error: $e');
+      }
+    }
+  }
+
   static void _showError(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

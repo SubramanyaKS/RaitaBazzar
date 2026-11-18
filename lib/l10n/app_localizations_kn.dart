@@ -85,7 +85,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get editMobile => 'ಸಂಖ್ಯೆ ಬದಲಿಸಿ';
 
   @override
-  String get searchHint => 'ಬೆಳೆಗಳು, ತರಕಾರಿ, ಧಾನ್ಯಗಳನ್ನು ಹುಡುಕಿ...';
+  String get searchHint => 'ಬೆಳೆಗಳನ್ನು ಹುಡುಕಿ (ಟೊಮೇಟೊ, ಈರುಳ್ಳಿ, ಆಲೂ)...';
 
   @override
   String get addProduce => 'ಬೆಳೆ ಸೇರಿಸಿ';
