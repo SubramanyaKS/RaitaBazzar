@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:raitabazzar/config/app_config.dart';
 
 class AppConstants {
   // Brand Colors
@@ -7,6 +8,10 @@ class AppConstants {
   static const Color lightGreen = Color(0xFF81C784);
   static const Color lightGreenBg = Color(0xFFF1F8E9);
   static const Color warmOrange = Color(0xFFFF9800);
+
+  // Cloudinary Configuration (Loaded dynamically via AppConfig / secrets.json)
+  static String get cloudinaryCloudName => AppConfig.cloudinaryCloudName;
+  static String get cloudinaryUploadPreset => AppConfig.cloudinaryUploadPreset;
 
   // Crop Categories
   static const List<String> cropCategories = [

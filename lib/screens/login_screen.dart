@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleVerifyOtp(AppProvider appProvider) {
+  void _handleVerifyOtp(AppProvider appProvider) async {
     final otp = _otpController.text.trim();
     if (otp.length < 4) {
       setState(() {
@@ -59,6 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       return;
     }
+
+    final rawPhone = _phoneController.text.trim();
+    final role = appProvider.selectedUser;
+    await appProvider.loginWithPhone(rawPhone, role);
+
+    if (!mounted) return;
 
     // Success -> navigate to respective role home screen
     if (appProvider.selectedUser == AppConstants.roleBuyer) {

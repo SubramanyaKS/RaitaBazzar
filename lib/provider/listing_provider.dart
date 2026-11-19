@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:raitabazzar/models/buyer_offer.dart';
 import 'package:raitabazzar/models/crop_listing.dart';
 import 'package:raitabazzar/services/firebase_service.dart';
+import 'package:raitabazzar/utils/crop_dictionary.dart';
 
 class ListingProvider with ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
@@ -283,9 +284,12 @@ class ListingProvider with ChangeNotifier {
     return _listings.where((listing) {
       final matchesActive = listing.isActive;
       final matchesCategory = category == 'All' || listing.category.toLowerCase().contains(category.toLowerCase());
-      final matchesQuery = query.isEmpty ||
-          listing.cropName.toLowerCase().contains(query.toLowerCase()) ||
-          listing.location.toLowerCase().contains(query.toLowerCase());
+      final matchesQuery = CropDictionary.matches(
+        query,
+        listing.cropName,
+        location: listing.location,
+        category: listing.category,
+      );
       final matchesDistance = maxDistanceKm == null || listing.distanceKm <= maxDistanceKm;
       return matchesActive && matchesCategory && matchesQuery && matchesDistance;
     }).toList();
