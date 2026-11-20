@@ -56,8 +56,9 @@
 * **Design System:** Material 3 with agricultural green palette
 * **State Management:** [Provider](https://pub.dev/packages/provider) (`ChangeNotifierProvider`, `Consumer2`)
 * **Localization:** `flutter_localizations` with `.arb` translation catalogs (`en`, `kn`, `hi`)
-* **Backend Database:** [Firebase Cloud Firestore](https://firebase.google.com/docs/firestore) (Real-time NoSQL streams)
-* **Cloud File Storage:** [Firebase Storage](https://firebase.google.com/docs/storage) (Produce photos CDN)
+* **Backend Database:** [Firebase Cloud Firestore](https://firebase.google.com/docs/firestore) (Real-time NoSQL streams for `/crops`, `/offers`, `/users`)
+* **Media & Photo Storage:** [Cloudinary CDN](https://cloudinary.com) (25 GB free storage & bandwidth with auto-compression)
+* **Cloud API Gateway:** [FastAPI](https://fastapi.tiangolo.com) (Hosted on Render: APMC Mandi rates, live district weather, and vernacular crop NLP)
 * **Hardware & Communication:**
   * [image_picker](https://pub.dev/packages/image_picker) for Camera & Gallery uploads
   * [url_launcher](https://pub.dev/packages/url_launcher) for direct WhatsApp & phone dialer integration
@@ -130,7 +131,7 @@ lib/
 ## 🗺️ Roadmap & Status
 
 For detailed project status, upcoming milestones (APMC Mandi Hub, GPS Radius Slider, WhatsApp digital receipts), and cost analyses, refer to:
-👉 **[PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md)**
+👉 **[PROJECT_STATUS_AND_ROADMAP.md](./docs/PROJECT_STATUS_AND_ROADMAP.md)**
 
 ---
 
