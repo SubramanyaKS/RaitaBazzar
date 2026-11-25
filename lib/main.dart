@@ -7,7 +7,10 @@ import 'package:raitabazzar/l10n/app_localizations.dart';
 import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
 import 'package:raitabazzar/provider/theme_provider.dart';
+import 'package:raitabazzar/screens/buyer_home_screen.dart';
+import 'package:raitabazzar/screens/farmer_home_screen.dart';
 import 'package:raitabazzar/screens/welcome_screen.dart';
+import 'package:raitabazzar/utils/constant.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,32 +22,56 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization warning: $e');
   }
-  runApp(const MyApp());
+
+  final appProvider = AppProvider();
+  final themeProvider = ThemeProvider();
+  await Future.wait([
+    appProvider.loadSession(),
+    themeProvider.loadTheme(),
+  ]);
+
+  runApp(MyApp(appProvider: appProvider, themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AppProvider? appProvider;
+  final ThemeProvider? themeProvider;
+
+  const MyApp({super.key, this.appProvider, this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        if (appProvider != null)
+          ChangeNotifierProvider<AppProvider>.value(value: appProvider!)
+        else
+          ChangeNotifierProvider(create: (_) => AppProvider()),
+        if (themeProvider != null)
+          ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider!)
+        else
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => ListingProvider()),
       ],
       child: Consumer2<AppProvider, ThemeProvider>(
-        builder: (context, appLang, themeProvider, _) {
+        builder: (context, appLang, themeProv, _) {
+          Widget startScreen = const WelcomeScreen();
+          if (appLang.isLoggedIn) {
+            startScreen = appLang.selectedUser == AppConstants.roleBuyer
+                ? const BuyerHomeScreen()
+                : const FarmerHomeScreen();
+          }
+
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'RaitaBazzar',
             locale: appLang.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            theme: themeProvider.lightTheme,
-            darkTheme: themeProvider.darkTheme,
-            themeMode: themeProvider.themeMode,
-            home: const WelcomeScreen(),
+            theme: themeProv.lightTheme,
+            darkTheme: themeProv.darkTheme,
+            themeMode: themeProv.themeMode,
+            home: startScreen,
           );
         },
       ),

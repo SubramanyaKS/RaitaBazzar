@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
+  static const String _prefDarkMode = 'is_dark_mode';
+
   ThemeMode _themeMode = ThemeMode.light;
 
   ThemeMode get themeMode => _themeMode;
@@ -44,8 +47,25 @@ class ThemeProvider with ChangeNotifier {
         ),
       );
 
-  void toggleTheme(bool isDark) {
+  Future<void> loadTheme() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isDark = prefs.getBool(_prefDarkMode) ?? false;
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+      notifyListeners();
+    } catch (_) {
+      // Safe fallback in unit tests or unsupported environments
+    }
+  }
+
+  Future<void> toggleTheme(bool isDark) async {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefDarkMode, isDark);
+    } catch (_) {
+      // Safe ignore
+    }
   }
 }

@@ -2,6 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactHelper {
+  /// Extracts the canonical 10-digit Indian mobile number for reliable matching.
+  /// e.g. '+91 98765 43210' -> '9876543210'
+  static String normalizePhone10(String phoneNumber) {
+    final digits = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 10 && digits.startsWith('91')) {
+      return digits.substring(digits.length - 10);
+    }
+    return digits;
+  }
+
+  /// Formats any Indian mobile number into canonical E.164 format (+91XXXXXXXXXX).
+  static String formatIndianPhone(String phoneNumber) {
+    final normalized = normalizePhone10(phoneNumber);
+    if (normalized.length == 10) {
+      return '+91$normalized';
+    }
+    return phoneNumber.trim();
+  }
+
   static Future<void> makePhoneCall(BuildContext context, String phoneNumber) async {
     final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
     final Uri launchUri = Uri(

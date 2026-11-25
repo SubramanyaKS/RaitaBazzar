@@ -19,7 +19,9 @@ class FarmerDashboardTab extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     final listingProvider = Provider.of<ListingProvider>(context);
     final appProvider = Provider.of<AppProvider>(context);
-    final listings = listingProvider.myFarmerListings;
+    final listings = listingProvider.getListingsForFarmer(appProvider.farmerPhone);
+    final farmerOffers = listingProvider.getOffersForFarmer(appProvider.farmerPhone);
+    final activeCount = listings.where((l) => l.isActive).length;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -199,7 +201,7 @@ class FarmerDashboardTab extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                     title: loc.activeListings,
-                    count: '${listingProvider.activeMarketListings.length}',
+                    count: '$activeCount',
                     icon: Icons.inventory_2_outlined,
                     color: Colors.orange.shade700,
                   ),
@@ -208,7 +210,7 @@ class FarmerDashboardTab extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                     title: loc.buyerOffers,
-                    count: '${listingProvider.offers.length}',
+                    count: '${farmerOffers.length}',
                     icon: Icons.local_offer_outlined,
                     color: AppConstants.primaryGreen,
                   ),

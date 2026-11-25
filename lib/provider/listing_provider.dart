@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:raitabazzar/models/buyer_offer.dart';
 import 'package:raitabazzar/models/crop_listing.dart';
 import 'package:raitabazzar/services/firebase_service.dart';
+import 'package:raitabazzar/utils/contact_helper.dart';
 import 'package:raitabazzar/utils/crop_dictionary.dart';
 
 class ListingProvider with ChangeNotifier {
@@ -168,6 +169,36 @@ class ListingProvider with ChangeNotifier {
   List<CropListing> get myFarmerListings => _listings;
   List<BuyerOffer> get offers => List.unmodifiable(_offers);
   int get pendingOffersCount => _offers.where((o) => o.status == 'Pending').length;
+
+  /// Returns only crop listings belonging to the specified farmer phone.
+  List<CropListing> getListingsForFarmer(String farmerPhone) {
+    final target = ContactHelper.normalizePhone10(farmerPhone);
+    if (target.isEmpty) return [];
+    return _listings
+        .where((l) => ContactHelper.normalizePhone10(l.farmerPhone) == target)
+        .toList();
+  }
+
+  /// Returns only incoming offers for crops owned by the specified farmer phone.
+  List<BuyerOffer> getOffersForFarmer(String farmerPhone) {
+    final myCropIds = getListingsForFarmer(farmerPhone).map((l) => l.id).toSet();
+    if (myCropIds.isEmpty) return [];
+    return _offers.where((o) => myCropIds.contains(o.listingId)).toList();
+  }
+
+  /// Count of pending offers for the specified farmer.
+  int pendingOffersCountForFarmer(String farmerPhone) {
+    return getOffersForFarmer(farmerPhone).where((o) => o.status == 'Pending').length;
+  }
+
+  /// Returns only bids/orders placed by the specified buyer phone.
+  List<BuyerOffer> getOffersForBuyer(String buyerPhone) {
+    final target = ContactHelper.normalizePhone10(buyerPhone);
+    if (target.isEmpty) return [];
+    return _offers
+        .where((o) => ContactHelper.normalizePhone10(o.buyerPhone) == target)
+        .toList();
+  }
 
   Future<void> addListing(CropListing listing, {File? imageFile}) async {
     // Optimistic local add

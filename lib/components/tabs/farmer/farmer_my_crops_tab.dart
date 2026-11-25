@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:raitabazzar/components/farmer_crop_item.dart';
 import 'package:raitabazzar/l10n/app_localizations.dart';
+import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
 import 'package:raitabazzar/screens/add_produce_screen.dart';
 import 'package:raitabazzar/utils/constant.dart';
+import 'package:raitabazzar/utils/crop_dictionary.dart';
 
 class FarmerMyCropsTab extends StatefulWidget {
   final VoidCallback? onSwitchToOffers;
@@ -29,7 +31,8 @@ class _FarmerMyCropsTabState extends State<FarmerMyCropsTab> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final listingProvider = Provider.of<ListingProvider>(context);
-    final allListings = listingProvider.myFarmerListings;
+    final appProvider = Provider.of<AppProvider>(context);
+    final allListings = listingProvider.getListingsForFarmer(appProvider.farmerPhone);
 
     // Metric Calculations
     final activeCount = allListings.where((l) => l.status == 'Active').length;
@@ -38,15 +41,18 @@ class _FarmerMyCropsTabState extends State<FarmerMyCropsTab> {
         .where((l) => l.status == 'Active')
         .fold(0.0, (sum, l) => sum + (l.pricePerUnit * l.quantity));
 
-    // Filter by Tab and Search
+    // Filter by Tab and Vernacular Search
     final filteredListings = allListings.where((l) {
       final matchesStatus = _selectedFilter == 'All' ||
           (_selectedFilter == 'Active' && l.status == 'Active') ||
           (_selectedFilter == 'Sold Out' && l.status == 'Sold Out');
 
-      final matchesQuery = _searchQuery.isEmpty ||
-          l.cropName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          l.category.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesQuery = CropDictionary.matches(
+        _searchQuery,
+        l.cropName,
+        location: l.location,
+        category: l.category,
+      );
 
       return matchesStatus && matchesQuery;
     }).toList();

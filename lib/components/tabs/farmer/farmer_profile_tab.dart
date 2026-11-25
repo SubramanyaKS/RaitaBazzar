@@ -370,7 +370,9 @@ class FarmerProfileTab extends StatelessWidget {
 
           // Logout Action
           OutlinedButton.icon(
-            onPressed: () {
+            onPressed: () async {
+              await appProvider.logout();
+              if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const WelcomeScreen()),
                 (route) => false,

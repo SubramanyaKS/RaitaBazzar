@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:raitabazzar/components/buyer_order_item.dart';
 import 'package:raitabazzar/l10n/app_localizations.dart';
+import 'package:raitabazzar/provider/app_provider.dart';
 import 'package:raitabazzar/provider/listing_provider.dart';
 
 class BuyerOrdersTab extends StatelessWidget {
@@ -11,7 +12,8 @@ class BuyerOrdersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final listingProvider = Provider.of<ListingProvider>(context);
-    final myOffers = listingProvider.offers;
+    final appProvider = Provider.of<AppProvider>(context);
+    final myOffers = listingProvider.getOffersForBuyer(appProvider.buyerPhone);
 
     return Scaffold(
       appBar: AppBar(title: Text(loc.navOrders)),
